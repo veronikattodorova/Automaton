@@ -4,29 +4,35 @@
 #include <fstream>
 using namespace std;
 
-int main() {
+int main()
+{
 	DeterminateFiniteAutomaton<int> aInt;
 	DeterminateFiniteAutomaton<char> aChar;
 	ifstream fin("in.txt");
 	ofstream fout("out.txt");
-	if (!fin) {
+	if (!fin)
+	{
 		cerr << "Could not open file!" << endl;
 		return -1;
 	}
-	if (!fout) {
+	if (!fout)
+	{
 		cerr << "Could not open file!" << endl;
 		return -1;
 	}
-	int num;
-	int type=0;
+	int num = 0;
+	int type = 0;
 	//1-int;
 	//2-char;
-here:
-	prntMenu();
+
+	printMenu();
 	cout << "\nEnter an option number:";
-	cin>>num;
-	while (num != 0) {
-		switchMenu(num,aInt,aChar,type,fin,fout);
-		goto here;
+	cin >> num;
+	while (num != 0)
+	{
+		switchMenu(num, aInt, aChar, type, fin, fout);
+		printMenu();
+		cout << "\nEnter an option number:";
+		cin >> num;
 	}
 }

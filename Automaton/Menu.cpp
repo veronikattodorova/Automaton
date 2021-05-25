@@ -1,6 +1,6 @@
 #include "Menu.h"
 
-int prntMenu() {
+int printMenu() {
 	cout << "\nChoose an option:" << endl;
 	unsigned i = 1;
 	cout << i++ << "-> Make automaton" << endl;

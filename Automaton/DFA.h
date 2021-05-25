@@ -293,21 +293,25 @@ int DeterminateFiniteAutomaton<T>::setEndIO(istream& in) const {
 	do
 	{
 		if (typeid(in) == typeid(cin)) {
-		cout << "Enter number of final states:";
+			cout << "Enter number of final states:";
+		}
 		in >> num;
 		if (num > numOfSt) {
 			cerr << "There cannot be " << num << " final states out of " << numOfSt << " states!\n";
 		}
-	}
+
 	} while (num > numOfSt);
 
 	MyStr str;
+
 	for (unsigned i = 0; i < num; i++) {
+
 		while (true) {
 			if (typeid(in) == typeid(cin)) {
 				cout << "Enter final state " << i + 1 << ": ";
 			}
 			in >> str;
+
 			try {
 				setEnd(str);
 				break;
