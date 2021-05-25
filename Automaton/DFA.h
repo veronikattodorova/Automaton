@@ -15,21 +15,21 @@ public:
 	int inputSt(istream&, unsigned);
 	int inputSym(istream&, unsigned);
 
-	State* getState(MyStr str) const;
-	unsigned getStateNum(MyStr) const;
+	State* getState(const MyStr& str) const;
+	unsigned getStateNum(const MyStr& str) const;
 	unsigned getNum()const;
 	State* getArr() const;
 
 	int makeTable(istream&);
-	int prntTable(ostream&) const;
+	int printTable(ostream&) const;
 
 	State* getBeg() const;
 
-	int setBegIO(istream&);
-	int setBeg(MyStr) throw(AutomatonStateException);
+	int setBegIO(istream&) const;
+	int setBeg(const MyStr& str) const;
 
-	int setEndIO(istream&);
-	int setEnd(MyStr) throw (AutomatonStateException);
+	int setEndIO(istream&) const;
+	int setEnd(const MyStr& str) const;
 
 	int fillArr(T*, MyStr) const;
 	State* transition(State*, T) const;
@@ -117,7 +117,7 @@ DeterminateFiniteAutomaton<T>::~DeterminateFiniteAutomaton() {
 		delete[] alphabet;
 	}
 	if (trTable != nullptr) {
-		for (int i = 0; i < numOfSt; i++) {
+		for (unsigned i = 0; i < numOfSt; i++) {
 			delete[] trTable[i];
 			trTable[i] = nullptr;
 		}
@@ -134,7 +134,7 @@ int DeterminateFiniteAutomaton<T>::inputSt(istream& in, unsigned st) {
 		states = nullptr;
 	}
 	states = new State[st];
-	for (int i = 0; i < st; i++) {
+	for (unsigned i = 0; i < st; i++) {
 		if (typeid(in) == typeid(cin)) {
 			std::cout << "Enter state number " << i + 1 << ":";
 		}
@@ -153,7 +153,7 @@ int DeterminateFiniteAutomaton<T>::inputSym(istream& in, unsigned sym) {
 	}
 	alphabet = new T[sym];
 	T a;
-	for (int i = 0; i < sym; i++) {
+	for (unsigned i = 0; i < sym; i++) {
 		if (typeid(in) == typeid(cin)) {
 			cout << "Enter symbol " << i + 1 << ":";
 		}
@@ -164,8 +164,8 @@ int DeterminateFiniteAutomaton<T>::inputSym(istream& in, unsigned sym) {
 }
 
 template <typename T>
-State* DeterminateFiniteAutomaton<T>::getState(MyStr str) const {
-	for (int i = 0; i < numOfSt; i++) {
+State* DeterminateFiniteAutomaton<T>::getState(const MyStr& str) const {
+	for (unsigned i = 0; i < numOfSt; i++) {
 		if (str == states[i].getName()) {
 			return states + i;
 		}
@@ -174,8 +174,8 @@ State* DeterminateFiniteAutomaton<T>::getState(MyStr str) const {
 }
 
 template <typename T>
-unsigned DeterminateFiniteAutomaton<T>::getStateNum(MyStr str) const {
-	for (int i = 0; i < numOfSt; i++) {
+unsigned DeterminateFiniteAutomaton<T>::getStateNum(const MyStr& str) const {
+	for (unsigned i = 0; i < numOfSt; i++) {
 		if (str == states[i].getName()) {
 			return i;
 		}
@@ -196,7 +196,7 @@ State* DeterminateFiniteAutomaton<T>::getArr() const {
 template <typename T>
 int DeterminateFiniteAutomaton<T>::makeTable(istream& in) {
 	if (trTable != nullptr) {
-		for (int i = 0; i < numOfSt; i++) {
+		for (unsigned i = 0; i < numOfSt; i++) {
 			delete[] trTable[i];
 		}
 		delete[] trTable;
@@ -208,24 +208,25 @@ int DeterminateFiniteAutomaton<T>::makeTable(istream& in) {
 		trTable[i] = new State[symbols];
 	}
 	for (int i = 0; i < states; i++) {
-		for (int k = 0; k < symbols; k++) {
-			if (typeid(in) == typeid(cin)){
-				here:
-				cout << "Please enter (" << this->states[i] << ", " << alphabet[k] << ")->";
-			}
-			MyStr str;
-			unsigned line;
-			try {
-				in >> str;
-				if (getState(str) == nullptr) {
-					line = __LINE__; throw AutomatonStateException(str);
+		MyStr str;
+		for (unsigned k = 0; k < symbols; k++) {
+			while (true) {
+				if (typeid(in) == typeid(cin)) {
+					cout << "Please enter (" << this->states[i] << ", " << alphabet[k] << ")->";
 				}
-			}
-			catch (AutomatonStateException& e){
-				cerr << "Exception cought at line " << line << endl;
-				cerr << "Exception type:" << typeid(e).name() << endl;
-				cerr << e.message() << endl;
-				goto here;
+				unsigned line;
+				try {
+					in >> str;
+					if (getState(str) == nullptr) {
+						line = __LINE__; throw AutomatonStateException(str);
+					}
+					else break;
+				}
+				catch (AutomatonStateException& e) {
+					cerr << "Exception caught at line " << line << endl;
+					cerr << "Exception type:" << typeid(e).name() << endl;
+					cerr << e.message() << endl;
+				}
 			}
 			trTable[i][k] = *(getState(str));
 		}
@@ -234,28 +235,31 @@ int DeterminateFiniteAutomaton<T>::makeTable(istream& in) {
 }
 
 template <typename T>
-int DeterminateFiniteAutomaton<T>::setBegIO(istream& in) {
-here:
-	if (typeid(in) == typeid(cin)) {
-		cout << "Enter an initial state:";
-	}
-	MyStr str;
-	in >> str;
-	try {
-		setBeg(str);
-	}
-	catch (...) {
-		goto here;
+int DeterminateFiniteAutomaton<T>::setBegIO(istream& in) const {
+	while (true)
+	{
+		if (typeid(in) == typeid(cin)) {
+			cout << "Enter an initial state:";
+		}
+		MyStr str;
+		in >> str;
+		try {
+			setBeg(str);
+			break;
+		}
+		catch (...) {
+			std::cout << "Error caught in setBegIO function!\n";
+		}
 	}
 	return 0;
 }
 
 template <typename T>
-int DeterminateFiniteAutomaton<T>::setBeg(MyStr str) throw(AutomatonStateException) {
+int DeterminateFiniteAutomaton<T>::setBeg(const MyStr& str) const {
 	if (getBeg() != nullptr) {
 		getBeg()->setBeg();
 	}
-	State* tmp;
+	State* tmp = nullptr;
 	unsigned line = 0;
 	try {
 		tmp = getState(str);
@@ -264,7 +268,7 @@ int DeterminateFiniteAutomaton<T>::setBeg(MyStr str) throw(AutomatonStateExcepti
 		}
 	}
 	catch (AutomatonStateException& e) {
-		cerr << "Exception cought at line " << line << endl;
+		cerr << "Exception caught at line " << line << endl;
 		cerr << "Exception type:" << typeid(e).name() << endl;
 		cerr << e.message() << endl;
 		throw;
@@ -275,7 +279,7 @@ int DeterminateFiniteAutomaton<T>::setBeg(MyStr str) throw(AutomatonStateExcepti
 
 template <typename T>
 State* DeterminateFiniteAutomaton<T>::getBeg() const {
-	for (int i = 0; i < numOfSt; i++) {
+	for (unsigned i = 0; i < numOfSt; i++) {
 		if (states[i].isBeg()) {
 			return states + i;
 		}
@@ -284,36 +288,40 @@ State* DeterminateFiniteAutomaton<T>::getBeg() const {
 }
 
 template <typename T>
-int DeterminateFiniteAutomaton<T>::setEndIO(istream& in) {
-	unsigned num;
-	if (typeid(in) == typeid(cin)) {
-		there:
-		cout << "Enter number of final states:";
-	}
-	in >> num;
-	if (num > numOfSt) {
-		cerr << "There cannot be " << num << " final states out of " << numOfSt << " states!\n";
-		goto there;
-	}
-	MyStr str;
-	for (int i = 0; i < num; i++) {
-	here:
+int DeterminateFiniteAutomaton<T>::setEndIO(istream& in) const {
+	unsigned num = 0;
+	do
+	{
 		if (typeid(in) == typeid(cin)) {
-			cout << "Enter final state " << i + 1 << ": ";
+		cout << "Enter number of final states:";
+		in >> num;
+		if (num > numOfSt) {
+			cerr << "There cannot be " << num << " final states out of " << numOfSt << " states!\n";
 		}
-		in >> str;
-		try {
-			setEnd(str);
-		}
-		catch (...) {
-			goto here;
+	}
+	} while (num > numOfSt);
+
+	MyStr str;
+	for (unsigned i = 0; i < num; i++) {
+		while (true) {
+			if (typeid(in) == typeid(cin)) {
+				cout << "Enter final state " << i + 1 << ": ";
+			}
+			in >> str;
+			try {
+				setEnd(str);
+				break;
+			}
+			catch (...) {
+				std::cout << "Error caught!\n";
+			}
 		}
 	}
 	return 0;
 }
 
 template <typename T>
-int DeterminateFiniteAutomaton<T>::setEnd(MyStr str) throw(AutomatonStateException) {
+int DeterminateFiniteAutomaton<T>::setEnd(const MyStr &str) const {
 	State* tmp = getState(str);
 	unsigned line = 0;
 	try {
@@ -335,13 +343,13 @@ template <typename T>
 int DeterminateFiniteAutomaton<T>::fillArr(T* word, MyStr str) const {
 	unsigned len = str.len();
 	if (typeid(T) == typeid(int)) {
-		for (int i = 0; i < len; i++) {
+		for (unsigned i = 0; i < len; i++) {
 			word[i] = str[i] - '0';
 		}
 		return 0;
 	}
 	if (typeid(T) == typeid(char)) {
-		for (int i = 0; i < len; i++) {
+		for (unsigned i = 0; i < len; i++) {
 			word[i] = (T)str[i];
 		}
 		return 0;
@@ -352,7 +360,7 @@ int DeterminateFiniteAutomaton<T>::fillArr(T* word, MyStr str) const {
 template <typename T>
 State* DeterminateFiniteAutomaton<T>::transition(State* pos, T sym) const {
 	unsigned stRow = getStateNum(pos->getName());
-	unsigned stCol=-1;
+	int stCol = -1;
 	for (int i = 0; i < symbols; i++) {
 		if (sym == alphabet[i]) {
 			stCol = i;
@@ -376,7 +384,7 @@ bool DeterminateFiniteAutomaton<T>::readWord() const {
 	T* word = new T[len];
 	fillArr(word, str);
 	State* pos = (getBeg());
-	for (int i = 0; i < len; i++) {
+	for (unsigned i = 0; i < len; i++) {
 		pos = transition(pos, word[i]);
 		//cout << (*pos).getName() << endl;
 	}
@@ -410,15 +418,15 @@ istream& operator>>(istream& lhs, DeterminateFiniteAutomaton<T>& rhs) {
 }
 
 template <typename T>
-int DeterminateFiniteAutomaton<T>::prntTable(ostream& out) const{
+int DeterminateFiniteAutomaton<T>::printTable(ostream& out) const{
 	out << "\t";
-	for (int i = 0; i < symbols; i++) {
+	for (unsigned i = 0; i < symbols; i++) {
 		out << alphabet[i] << '\t';
 	}
 	out << endl;
-	for (int i = 0; i < numOfSt; i++) {
+	for (unsigned i = 0; i < numOfSt; i++) {
 		out << states[i] << '\t';
-		for (int k = 0; k < symbols; k++) {
+		for (unsigned k = 0; k < symbols; k++) {
 			out << trTable[i][k] << "\t";
 		}
 		out << endl;
@@ -429,10 +437,10 @@ int DeterminateFiniteAutomaton<T>::prntTable(ostream& out) const{
 template <typename T>
 ostream& operator<<(ostream& lhs, const DeterminateFiniteAutomaton<T>& rhs) {
 	lhs << "Transition table:" << endl;
-	rhs.prntTable(lhs);
+	rhs.printTable(lhs);
 	lhs << "Initial state:" << *(rhs.getBeg()) << endl;
 	lhs << "Final states: ";
-	for (int i = 0; i < rhs.getNum(); i++) {
+	for (unsigned i = 0; i < rhs.getNum(); i++) {
 		if ((rhs.getArr() + i)->isEnd()) {
 			lhs << *(rhs.getArr() + i) << "\t";
 		}
