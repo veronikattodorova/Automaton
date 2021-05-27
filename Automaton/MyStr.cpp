@@ -11,7 +11,7 @@ MyStr::MyStr(const char* txt) : buff(new char[strlen(txt) + 1]) {
 	buff[strlen(txt)] = '\0';
 }
 MyStr::MyStr(const MyStr& txt) : buff(new char[txt.len() + 1]) {
-	for (int i = 0; i < txt.len(); i++) {
+	for (unsigned i = 0; i < txt.len(); i++) {
 		buff[i] = txt[i];
 	}
 	buff[txt.len()] = '\0';
@@ -30,7 +30,7 @@ MyStr& MyStr::operator=(const MyStr& rhs) {
 			buff = nullptr;
 		}
 		buff = new char[rhs.len() + 1];
-		for (int i = 0; i < rhs.len(); i++) {
+		for (unsigned i = 0; i < rhs.len(); i++) {
 			buff[i] = rhs[i];
 		}
 		buff[rhs.len()] = '\0';
@@ -44,7 +44,7 @@ MyStr MyStr::operator+(const MyStr& rhs) const {
 	unsigned lenOfRhs = rhs.len();
 	char* buffer = new char[len + 1];
 	int i = 0;
-	for (; i < lenOfThis; i++) {
+	for (unsigned i =0; i < lenOfThis; i++) {
 		buffer[i] = buff[i];
 	}
 	int j = 0;
@@ -59,7 +59,7 @@ MyStr MyStr::operator+(const MyStr& rhs) const {
 
 MyStr MyStr::operator+(char ch) const {
 	char* buffer = new char[len() + 2];
-	for (int i = 0; i < len(); i++) {
+	for (unsigned i = 0; i < len(); i++) {
 		buffer[i] = buff[i];
 	}
 	buffer[len()] = ch;
@@ -77,12 +77,12 @@ char& MyStr::operator[](unsigned i) {
 	return buff[i];
 }
 
-ostream& MyStr::ins(ostream& out) const {
+std::ostream& MyStr::ins(std::ostream& out) const {
 	out << buff;
 	return out;
 }
 
-istream& MyStr::ext(istream& in) {
+std::istream& MyStr::ext(std::istream& in) {
 	char buffer[100];
 	in >> buffer;
 	(*this) = MyStr(buffer);
@@ -96,17 +96,18 @@ unsigned MyStr::len() const {
 bool MyStr::operator==(const MyStr& rhs) const {
 	if ((*this).len() != rhs.len()) return false;
 	unsigned len = (*this).len();
-	for (int i = 0; i < len; i++) {
+	for (unsigned i = 0; i < len; i++) {
 		if ((*this)[i] != rhs[i])
 			return false;
 	}
 	return true;
 }
 
-ostream& operator<<(ostream& lhs, const MyStr& rhs) {
+std::ostream& operator<<(std::ostream& lhs, const MyStr& rhs) {
 	return rhs.ins(lhs);
 }
-istream& operator>>(istream& lhs, MyStr& rhs) {
+
+std::istream& operator>>(std::istream& lhs, MyStr& rhs) {
 	return rhs.ext(lhs);
 }
 

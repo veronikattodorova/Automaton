@@ -20,8 +20,8 @@ public:
 	MyStr getSt2()const;
 
 	MyStr getName() const;
-	ostream& ins(ostream&) const;
-	istream& ext(istream&);
+	std::ostream& ins(std::ostream&) const;
+	std::istream& ext(std::istream&);
 
 private:
 	MyStr name;
@@ -29,7 +29,7 @@ private:
 	bool end;
 };
 
-ostream& operator<<(ostream&, const State&);
-istream& operator>>(istream&, State&);
+std::ostream& operator<<(std::ostream&, const State&);
+std::istream& operator>>(std::istream&, State&);
 
 #endif

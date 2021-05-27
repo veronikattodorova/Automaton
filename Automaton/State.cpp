@@ -71,22 +71,22 @@ MyStr State::getName() const {
 	return name;
 }
 
-ostream& State::ins(ostream& out) const {
+std::ostream& State::ins(std::ostream& out) const {
 	out << name;
 	return out;
 }
 
-ostream& operator<<(ostream& lhs, const State& rhs) {
+std::ostream& operator<<(std::ostream& lhs, const State& rhs) {
 	return rhs.ins(lhs);
 }
 
-istream& State::ext(istream& in) {
+std::istream& State::ext(std::istream& in) {
 	MyStr str;
 	in >> str;
 	this->setName(str);
 	return in;
 }
 
-istream& operator>>(istream& lhs, State& rhs) {
+std::istream& operator>>(std::istream& lhs, State& rhs) {
 	return rhs.ext(lhs);
 }

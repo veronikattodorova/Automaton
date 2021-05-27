@@ -2,37 +2,23 @@
 #include "Menu.h"
 #include <iostream>
 #include <fstream>
+#include <vector>
 using namespace std;
 
 int main()
 {
-	DeterminateFiniteAutomaton<int> aInt;
-	DeterminateFiniteAutomaton<char> aChar;
-	ifstream fin("in.txt");
-	ofstream fout("out.txt");
-	if (!fin)
-	{
-		cerr << "Could not open file!" << endl;
-		return -1;
-	}
-	if (!fout)
-	{
-		cerr << "Could not open file!" << endl;
-		return -1;
-	}
-	int num = 0;
-	int type = 0;
-	//1-int;
-	//2-char;
 
-	printMenu();
+	Menu menu;
+
+	menu.printMenu();
+	int option;
 	cout << "\nEnter an option number:";
-	cin >> num;
-	while (num != 0)
+	cin >> option;
+	while (option != 0)
 	{
-		switchMenu(num, aInt, aChar, type, fin, fout);
-		printMenu();
+		menu.selectMenuOption(option);
+		menu.printMenu();
 		cout << "\nEnter an option number:";
-		cin >> num;
+		cin >> option;
 	}
 }

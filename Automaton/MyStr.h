@@ -1,7 +1,6 @@
 #ifndef MYSTR_H
 #define MYSTR_H
 #include <iostream>
-using namespace std;
 
 class MyStr {
 public:
@@ -15,8 +14,8 @@ public:
 	MyStr operator+(char) const;
 	char operator[](unsigned) const;
 	char& operator[](unsigned);
-	ostream& ins(ostream&) const;
-	istream& ext(istream&);
+	std::ostream& ins(std::ostream&) const;
+	std::istream& ext(std::istream&);
 	unsigned len() const;
 
 	bool operator==(const MyStr&) const;
@@ -25,8 +24,8 @@ private:
 	char* buff;
 };
 
-ostream& operator<<(ostream&, const MyStr&);
-istream& operator>>(istream&, MyStr&);
+std::ostream& operator<<(std::ostream&, const MyStr&);
+std::istream& operator>>(std::istream&, MyStr&);
 //istream& getline(istream&, MyStr&, const char = '\n');
 
 
