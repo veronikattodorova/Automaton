@@ -44,7 +44,7 @@ MyStr MyStr::operator+(const MyStr& rhs) const {
 	unsigned lenOfRhs = rhs.len();
 	char* buffer = new char[len + 1];
 	int i = 0;
-	for (unsigned i =0; i < lenOfThis; i++) {
+	for (; i < lenOfThis; i++) {
 		buffer[i] = buff[i];
 	}
 	int j = 0;
