@@ -2,7 +2,8 @@
 #define MYSTR_H
 #include <iostream>
 
-class MyStr {
+class MyStr
+{
 public:
 	MyStr();
 	MyStr(const char*);
@@ -27,6 +28,5 @@ private:
 std::ostream& operator<<(std::ostream&, const MyStr&);
 std::istream& operator>>(std::istream&, MyStr&);
 //istream& getline(istream&, MyStr&, const char = '\n');
-
 
 #endif
