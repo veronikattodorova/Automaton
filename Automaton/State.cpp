@@ -1,7 +1,7 @@
 #include "State.h"
 #include "MyStr.h"
 
-State::State() :name("NoName"), begin(0), end(0) {}
+State::State() :name("NoName"), begin(false), end(false) {}
 
 State::State(MyStr str) : name(str), begin(false), end(false) {}
 
