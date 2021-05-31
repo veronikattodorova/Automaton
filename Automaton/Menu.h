@@ -31,11 +31,9 @@ private:
 	std::vector<DeterminateFiniteAutomaton<char>> charAutomatons;
 
 	int makeAutomaton();
-	int printAutomaton() const;
-	int printInitialState();
-	int readWord() const;
-	int chooseAutomaton(int& type) const;
-	CreationOptions chooseCreationMethod() const;
+
+	static int chooseAutomatonType();
+	static CreationOptions chooseCreationMethod();
 };
 
 template <typename T>
@@ -49,7 +47,7 @@ int chooseAutomaton(std::vector<DeterminateFiniteAutomaton<T>>& automatonArr)
 	}
 	std::cout << "Enter the index of the automaton you want to choose:";
 	std::cin >> automatonIndex;
-	while (automatonArr.size() <= automatonIndex) //Int automatons
+	while (automatonArr.size() <= automatonIndex && automatonIndex < 0)
 	{
 		std::cout << "There is no automaton of this type at this index!\n\n";
 		std::cout << "Enter the index of the automaton you want to choose:";
@@ -59,7 +57,41 @@ int chooseAutomaton(std::vector<DeterminateFiniteAutomaton<T>>& automatonArr)
 }
 
 template <typename T>
-int inputFromFile(DeterminateFiniteAutomaton<T> newAutomaton)
+int printAutomaton(std::vector<DeterminateFiniteAutomaton<T>>& automatonArr)
+{
+	std::cout << "Choose the automaton that you want to print!\n";
+	int automatonIndex = chooseAutomaton<T>(automatonArr);
+	if (automatonIndex >= 0)
+	{
+		int outputChoice = 0;
+		std::cout << "Please choose where you wish to print the file!\n";
+		std::cout << "1-> Print to the console\n";
+		std::cout << "2-> Print to external file - out.txt\n";
+		std::cin >> outputChoice;
+		while (outputChoice != 1 && outputChoice != 2)
+		{
+			std::cout << "Please choose where you wish to print the file!\n";
+			std::cout << "1-> Print to the console\n";
+			std::cout << "2-> Print to external file - out.txt\n";
+		}
+		if (outputChoice == 1)
+			std::cout << automatonArr[automatonIndex];
+		else
+		{
+			std::fstream fout("out.txt");
+			if (!fout)
+			{
+				std::cout << "File could not be opened\n";
+				return -1;
+			}
+			fout << automatonArr[automatonIndex];
+		}
+	}
+	return automatonIndex;
+}
+
+template <typename T>
+int inputFromFile(DeterminateFiniteAutomaton<T>& newAutomaton)
 {
 	std::ifstream fin("in.txt");
 	if (!fin)
@@ -68,6 +100,45 @@ int inputFromFile(DeterminateFiniteAutomaton<T> newAutomaton)
 		return -1;
 	}
 	fin >> newAutomaton;
+	return 0;
+}
+
+template <typename T>
+int printInitialState(std::vector<DeterminateFiniteAutomaton<T>>& automatonArr)
+{
+	int automatonIndex = chooseAutomaton<T>(automatonArr);
+	if (automatonIndex >= 0)
+	{
+		std::cout << "\nCurrent initial state:" << *(automatonArr[automatonIndex].getBeg()) << std::endl;
+		std::cout << "Do you want to change the initial state?" << std::endl;
+		std::cout << "1-> yes\n2-> no\n";
+		int choice;
+		std::cin >> choice;
+		while (choice != 1 && choice != 2)
+		{
+			std::cout << "There is no such option!" << std::endl;
+			std::cin >> choice;
+		}
+		if (choice == 1)
+		{
+			{
+				automatonArr[automatonIndex].setBegIO(std::cin);
+			}
+		}
+	}
+	return 0;
+}
+
+template <typename T>
+int readWord(std::vector<DeterminateFiniteAutomaton<T>>& automatonArr)
+{
+	int automatonIndex = chooseAutomaton<T>(automatonArr);
+	if (automatonIndex >= 0)
+	{
+		std::cout << (automatonArr[automatonIndex].readWord() == 1
+			              ? "The word was recognized by the automaton"
+			              : "The word was not recognized by the automaton");
+	}
 	return 0;
 }
 
@@ -85,8 +156,6 @@ int executeAutomatonOpeartions(DeterminateFiniteAutomaton<T>& newAutomaton,
 		int automatonForUnion1 = chooseAutomaton<T>(automatonArr);
 		int automatonForUnion2 = chooseAutomaton<T>(automatonArr);
 		newAutomaton = automatonArr[automatonForUnion1] | automatonArr[automatonForUnion2];
-		std::cout << newAutomaton;
-		return 0;
 	}
 	if (operation == OPERATION_INTERSECT)
 	{
@@ -97,6 +166,7 @@ int executeAutomatonOpeartions(DeterminateFiniteAutomaton<T>& newAutomaton,
 		std::cout << "Choose the automatons to intersect: \n";
 		int automatonForIntersect1 = chooseAutomaton<T>(automatonArr);
 		int automatonForIntersect2 = chooseAutomaton<T>(automatonArr);
+
 		newAutomaton = automatonArr[automatonForIntersect1] & automatonArr[automatonForIntersect2];
 	}
 	else
@@ -110,6 +180,7 @@ int executeAutomatonOpeartions(DeterminateFiniteAutomaton<T>& newAutomaton,
 		DeterminateFiniteAutomaton<T> automatonToInverse = automatonArr[automatonToInverseIndex];
 		newAutomaton = automatonToInverse ^ automatonToInverse;
 	}
+	return 0;
 }
 
 template <typename T>
