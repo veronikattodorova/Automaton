@@ -47,7 +47,7 @@ int chooseAutomaton(std::vector<DeterminateFiniteAutomaton<T>>& automatonArr)
 	}
 	std::cout << "Enter the index of the automaton you want to choose:";
 	std::cin >> automatonIndex;
-	while (automatonArr.size() <= automatonIndex && automatonIndex < 0)
+	while (automatonIndex >= automatonArr.size() || automatonIndex < 0)
 	{
 		std::cout << "There is no automaton of this type at this index!\n\n";
 		std::cout << "Enter the index of the automaton you want to choose:";

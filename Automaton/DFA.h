@@ -651,6 +651,7 @@ int DeterminateFiniteAutomaton<T>::setEnd(const MyStr& str) const
 		std::cerr << "Exception cought at line " << line << std::endl;
 		std::cerr << "Exception type:" << typeid(e).name() << std::endl;
 		std::cerr << e.message() << std::endl;
+		throw;
 	}
 	tmp->setEnd();
 	return 0;
