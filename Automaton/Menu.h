@@ -1,10 +1,24 @@
 #ifndef MENU_H
 #define MENU_H
-#include <iostream>
 #include <vector>
-#include <fstream>
 #include "MyStr.h"
 #include "DFA.h"
+
+enum CreationOptions
+{
+	OPTION_CONSOLE = 1,
+	OPTION_TXT_FILE,
+	OPTION_UNIFY,
+	OPTION_INTERSECT,
+	OPTION_NEGATE
+};
+
+enum DFAOperations
+{
+	OPERATION_UNIFY,
+	OPERATION_INTERSECT,
+	OPERATION_NEGATE
+};
 
 class Menu
 {
@@ -20,197 +34,134 @@ private:
 	int printAutomaton() const;
 	int printInitialState();
 	int readWord() const;
-	int makeIntAutomaton(bool createFromFile);
-	int makeCharAutomaton(bool createFromFile);
 	int chooseAutomaton(int& type) const;
-
+	CreationOptions chooseCreationMethod() const;
 };
 
-
-
-/*
-
-template <typename A, typename B, template<typename> class DeterminateFiniteAutomaton>
-int switchMenu(int a, std::vector<DeterminateFiniteAutomaton<A>>& intAutomatons,
-               std::vector<DeterminateFiniteAutomaton<B>>& charAutomatons, int& type, std::istream& fin,
-               std::ostream& fout)
+template <typename T>
+int chooseAutomaton(std::vector<DeterminateFiniteAutomaton<T>>& automatonArr)
 {
-	switch (a)
+	int automatonIndex;
+	if (automatonArr.empty())
 	{
-	case 1:
-		{
-			makeAutomaton(intAutomatons, aChar, type, fin);
-			break;
-		}
-	case 2:
-		{
-			printAutomaton(aInt, aChar, type, fout);
-			break;
-		}
-	case 3:
-		{
-			if (type == 1)
-				printInitial(aInt);
-			else if (type == 2)
-				printInitial(aChar);
-			else std::cout << "There is no automaton made!" << std::endl;
-			break;
-		}
-	case 4:
-		{
-			if (type == 1)
-				std::cout << ((aInt.readWord() == 1)
-					              ? "The word was accepted by the automaton!"
-					              : "The word was not accepted by the automaton!") << std::endl;
-			else if (type == 2)
-				std::cout << ((aChar.readWord() == 1)
-					              ? "The word was accepted by the automaton!"
-					              : "The word was not accepted by the automaton!") << std::endl;
-			else std::cout << "There is no automaton made!" << std::endl;
-			break;
-		}
-	case 5:
-		{
-		}
-	default:
-		std::cout << "There is no such option\n";
+		std::cout << "There are no automatons made of this type!\n";
+		return -1;
 	}
+	std::cout << "Enter the index of the automaton you want to choose:";
+	std::cin >> automatonIndex;
+	while (automatonArr.size() <= automatonIndex) //Int automatons
+	{
+		std::cout << "There is no automaton of this type at this index!\n\n";
+		std::cout << "Enter the index of the automaton you want to choose:";
+		std::cin >> automatonIndex;
+	}
+	return automatonIndex;
+}
+
+template <typename T>
+int inputFromFile(DeterminateFiniteAutomaton<T> newAutomaton)
+{
+	std::ifstream fin("in.txt");
+	if (!fin)
+	{
+		std::cout << "File could not be opened\n";
+		return -1;
+	}
+	fin >> newAutomaton;
 	return 0;
 }
 
-template <typename A, typename B, template<typename> class DeterminateFiniteAutomaton>
-int makeAutomaton(DeterminateFiniteAutomaton<A>& aInt, DeterminateFiniteAutomaton<B>& aChar, int& type,
-                  std::istream& fin)
+template <typename T>
+int executeAutomatonOpeartions(DeterminateFiniteAutomaton<T>& newAutomaton,
+                               std::vector<DeterminateFiniteAutomaton<T>>& automatonArr, DFAOperations operation)
 {
-	std::cout << "Enter type of the automaton:" << std::endl;
-	std::cout << "1-> DeterminateFiniteAutomaton with an int alphabet" << std::endl;
-	std::cout << "2-> DeterminateFiniteAutomaton with a char alphabet" << std::endl;
-	int choice1;
-	std::cin >> choice1;
-	while (choice1 != 1 && choice1 != 2)
+	if (operation == OPERATION_UNIFY)
 	{
-		std::cout << "There is no such option!" << std::endl;
-		std::cin >> choice1;
-	}
-
-	std::cout << "Input data form:" << std::endl;
-	std::cout << "1-> the console" << std::endl;
-	std::cout << "2-> a txt file" << std::endl;
-	int choice2;
-	std::cin >> choice2;
-	while (choice2 != 1 && choice2 != 2)
-	{
-		std::cout << "There is no such option!" << std::endl;
-		std::cin >> choice2;
-	}
-	if (choice1 == 1)
-	{
-		type = 1;
-		if (choice2 == 1)
+		if (automatonArr.size() < 2)
 		{
-			std::cin >> aInt;
+			throw NotEnoughAutomatonsException("There are not enough automatons of this type!");
 		}
-		else
-		{
-			fin >> aInt;
-		}
-	}
-	else if (choice1 == 2)
-	{
-		type = 2;
-		if (choice2 == 1)
-		{
-			std::cin >> aChar;
-		}
-		else
-		{
-			fin >> aChar;
-		}
-	}
-	return 0;
-}
-
-template <typename A, typename B, template<typename> class DeterminateFiniteAutomaton>
-int printAutomaton(DeterminateFiniteAutomaton<A>& aInt, DeterminateFiniteAutomaton<B>& aChar, int& type,
-                   std::ostream& fout)
-{
-	if (type == 0)
-	{
-		std::cout << "There is no automaton made!" << std::endl;
+		std::cout << "Choose the automatons to unify: \n";
+		int automatonForUnion1 = chooseAutomaton<T>(automatonArr);
+		int automatonForUnion2 = chooseAutomaton<T>(automatonArr);
+		newAutomaton = automatonArr[automatonForUnion1] | automatonArr[automatonForUnion2];
+		std::cout << newAutomaton;
 		return 0;
 	}
-	std::cout << "Print automaton:" << std::endl;
-	std::cout << "1-> in the console" << std::endl;
-	std::cout << "2-> in a txt file" << std::endl;
-	int choice;
-	std::cin >> choice;
-	while (choice != 1 && choice != 2)
+	if (operation == OPERATION_INTERSECT)
 	{
-		std::cout << "There is no such option!" << std::endl;
-		std::cin >> choice;
+		if (automatonArr.size() < 2)
+		{
+			throw NotEnoughAutomatonsException("There are not enough automatons of this type!");
+		}
+		std::cout << "Choose the automatons to intersect: \n";
+		int automatonForIntersect1 = chooseAutomaton<T>(automatonArr);
+		int automatonForIntersect2 = chooseAutomaton<T>(automatonArr);
+		newAutomaton = automatonArr[automatonForIntersect1] & automatonArr[automatonForIntersect2];
 	}
-	switch (choice)
+	else
 	{
-	case 1:
+		if (automatonArr.size() == 0)
 		{
-			if (type == 1)
-			{
-				std::cout << aInt << std::endl;
-			}
-			else if (type == 2)
-			{
-				std::cout << aChar << std::endl;
-			}
-			break;
+			throw NotEnoughAutomatonsException("There are no automatons of this type!");
 		}
-	case 2:
-		{
-			if (type == 1)
-			{
-				fout << aInt << std::endl;
-			}
-			else if (type == 2)
-			{
-				fout << aChar << std::endl;
-			}
-			break;
-		}
-	default:
-		{
-			break;
-		}
+		std::cout << "Choose the automatons to inverse: \n";
+		int automatonToInverseIndex = chooseAutomaton<T>(automatonArr);
+		DeterminateFiniteAutomaton<T> automatonToInverse = automatonArr[automatonToInverseIndex];
+		newAutomaton = automatonToInverse ^ automatonToInverse;
 	}
-	return 0;
 }
 
-template <typename A, template<typename> class DeterminateFiniteAutomaton>
-int printInitial(DeterminateFiniteAutomaton<A>& a)
+template <typename T>
+int createAutomatonAndPush(CreationOptions method, std::vector<DeterminateFiniteAutomaton<T>>& automatonArr)
 {
-	std::cout << "\nCurrent initial state:" << *(a.getBeg()) << std::endl;
-	std::cout << "Do you want to change the initial state?" << std::endl;
-	std::cout << "1-> yes\n2-> no\n";
-	int choice;
-	std::cin >> choice;
-	while (choice != 1 && choice != 2)
+	DeterminateFiniteAutomaton<T> newAutomaton;
+
+	switch (method)
 	{
-		std::cout << "There is no such option!" << std::endl;
-		std::cin >> choice;
-	}
-	switch (choice)
-	{
-	case 1:
+	case OPTION_CONSOLE:
+		std::cin >> newAutomaton;
+		break;
+	case OPTION_TXT_FILE:
+		inputFromFile<T>(newAutomaton);
+		break;
+	case OPTION_UNIFY:
+		try
 		{
-			a.setBegIO(std::cin);
-			break;
+			executeAutomatonOpeartions<T>(newAutomaton, automatonArr, OPERATION_UNIFY);
 		}
-	case 2:
+		catch (NotEnoughAutomatonsException e)
 		{
-			break;
+			std::cout << e.message() << std::endl;
+			return -1;
 		}
-	default:
+		break;
+	case OPTION_INTERSECT:
+		try
+		{
+			executeAutomatonOpeartions<T>(newAutomaton, automatonArr, OPERATION_INTERSECT);
+		}
+		catch (NotEnoughAutomatonsException e)
+		{
+			std::cout << e.message() << std::endl;
+			return -1;
+		}
+		break;
+	case OPTION_NEGATE:
+		try
+		{
+			executeAutomatonOpeartions<T>(newAutomaton, automatonArr, OPERATION_NEGATE);
+		}
+		catch (NotEnoughAutomatonsException e)
+		{
+			std::cout << e.message() << std::endl;
+			return -1;
+		}
 		break;
 	}
+	automatonArr.push_back(newAutomaton);
+
 	return 0;
-} */
+}
 
 #endif

@@ -2,7 +2,8 @@
 #define STATE_H
 #include "MyStr.h"
 
-class State {
+class State
+{
 public:
 	State();
 	State(MyStr);
@@ -10,14 +11,14 @@ public:
 	State& operator=(const State&);
 	~State();
 
-	int  setBeg();
+	int setBeg();
 	int setEnd();
 	int setName(MyStr);
 	bool isBeg() const;
 	bool isEnd() const;
 
 	MyStr getSt1() const;
-	MyStr getSt2()const;
+	MyStr getSt2() const;
 
 	MyStr getName() const;
 	std::ostream& ins(std::ostream&) const;

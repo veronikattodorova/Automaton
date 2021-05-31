@@ -25,6 +25,9 @@ public:
 		return nullptr;
 	}
 
+	unsigned getSymbols() const { return symbols; }
+	unsigned getSymbol(unsigned i) const { return alphabet[i]; }
+
 	unsigned getStateNum(const MyStr& str) const;
 	unsigned getNum() const;
 	State* getArr() const;
@@ -45,7 +48,8 @@ public:
 	bool readWord() const;
 
 	DeterminateFiniteAutomaton operator&(const DeterminateFiniteAutomaton&);
-
+	DeterminateFiniteAutomaton operator|(const DeterminateFiniteAutomaton&);
+	DeterminateFiniteAutomaton operator^(const DeterminateFiniteAutomaton&);
 
 private:
 	unsigned stateCount;
@@ -54,8 +58,18 @@ private:
 	T* alphabet;
 	State** trTable;
 
-	int makeTableFromAutomatons(const DeterminateFiniteAutomaton& automaton1,
-	                            const DeterminateFiniteAutomaton& automaton2);
+	int makeStatesFromAutomatons(const DeterminateFiniteAutomaton& automaton1,
+	                             const DeterminateFiniteAutomaton& automaton2);
+	int setBegFromAutomatons(const DeterminateFiniteAutomaton& automaton1,
+	                         const DeterminateFiniteAutomaton& automaton2);
+	int setEndUnion(const DeterminateFiniteAutomaton& automaton1,
+	                const DeterminateFiniteAutomaton& automaton2);
+	int setEndIntersection(const DeterminateFiniteAutomaton& automaton1,
+	                       const DeterminateFiniteAutomaton& automaton2);
+	int makeAlphFromAutomatons(const DeterminateFiniteAutomaton& automaton1,
+	                           const DeterminateFiniteAutomaton& automaton2);
+	int makeTableFromAutomatons(const DeterminateFiniteAutomaton<T>& automaton1,
+	                            const DeterminateFiniteAutomaton<T>& automaton2);
 };
 
 template <typename T>
@@ -96,6 +110,16 @@ DeterminateFiniteAutomaton<T>& DeterminateFiniteAutomaton<T>::operator=(const De
 {
 	if (this != &rhs)
 	{
+		if (trTable != nullptr)
+		{
+			for (int i = 0; i < stateCount; i++)
+			{
+				delete[] trTable[i];
+				trTable[i] = nullptr;
+			}
+			delete[] trTable;
+			trTable = nullptr;
+		}
 		stateCount = rhs.stateCount;
 		if (states != nullptr)
 		{
@@ -117,16 +141,7 @@ DeterminateFiniteAutomaton<T>& DeterminateFiniteAutomaton<T>::operator=(const De
 		{
 			alphabet[i] = rhs.alphabet[i];
 		}
-		if (trTable != nullptr)
-		{
-			for (int i = 0; i < stateCount; i++)
-			{
-				delete[] trTable[i];
-				trTable[i] = nullptr;
-			}
-			delete[] trTable;
-			trTable = nullptr;
-		}
+
 		trTable = new State*[stateCount];
 		for (int i = 0; i < (*this).getNum(); i++)
 		{
@@ -148,6 +163,40 @@ DeterminateFiniteAutomaton<T> DeterminateFiniteAutomaton<T>::operator&(const Det
 {
 	DeterminateFiniteAutomaton<T> newAutomaton;
 
+	newAutomaton.makeStatesFromAutomatons(*this, rhs);
+	newAutomaton.setBegFromAutomatons(*this, rhs);
+	newAutomaton.setEndIntersection(*this, rhs);
+
+	newAutomaton.makeAlphFromAutomatons(*this, rhs);
+	newAutomaton.makeTableFromAutomatons(*this, rhs);
+
+	return newAutomaton;
+}
+
+template <typename T>
+DeterminateFiniteAutomaton<T> DeterminateFiniteAutomaton<T>::operator|(const DeterminateFiniteAutomaton& rhs)
+{
+	DeterminateFiniteAutomaton<T> newAutomaton;
+
+	newAutomaton.makeStatesFromAutomatons(*this, rhs);
+	newAutomaton.setBegFromAutomatons(*this, rhs);
+	newAutomaton.setEndUnion(*this, rhs);
+
+	newAutomaton.makeAlphFromAutomatons(*this, rhs);
+	newAutomaton.makeTableFromAutomatons(*this, rhs);
+
+	return newAutomaton;
+}
+
+template <typename T>
+DeterminateFiniteAutomaton<T> DeterminateFiniteAutomaton<T>::operator^(const DeterminateFiniteAutomaton& rhs)
+{
+	DeterminateFiniteAutomaton<T> newAutomaton;
+	newAutomaton = (*this) | rhs;
+	for (auto i = 0; i < newAutomaton.getStateCount(); i++)
+	{
+		newAutomaton.getState(i)->setEnd();
+	}
 	return newAutomaton;
 }
 
@@ -311,24 +360,165 @@ int DeterminateFiniteAutomaton<T>::makeTable(std::istream& in)
 }
 
 template <typename T>
-int DeterminateFiniteAutomaton<T>::makeTableFromAutomatons(const DeterminateFiniteAutomaton<T>& automaton1,
-                                                           const DeterminateFiniteAutomaton<T>& automaton2)
+int DeterminateFiniteAutomaton<T>::makeStatesFromAutomatons(const DeterminateFiniteAutomaton<T>& automaton1,
+                                                            const DeterminateFiniteAutomaton<T>& automaton2)
 {
 	this->stateCount = automaton1.getStateCount() * automaton2.getStateCount();
 	unsigned currentStateCount = 0;
 	states = new State[stateCount];
 	for (unsigned i = 0; i < automaton1.getStateCount(); i++)
 	{
-		for (unsigned j = 0; j < automaton2.getStateCount(); i++)
+		for (unsigned j = 0; j < automaton2.getStateCount(); j++)
 		{
 			this->states[currentStateCount].setName(
-				automaton1.getState(i)->getName() + automaton2.getState(j)->getName());
+				automaton1.getState(i)->getName() + ',' + automaton2.getState(j)->getName());
 			currentStateCount++;
 		}
 	}
-	for (auto i = 0; i < stateCount; i++)
+	/*for (auto i = 0; i < stateCount; i++)
 	{
 		std::cout << "State: " << states[i].getName() << "\n";
+	}*/
+	return 0;
+}
+
+template <typename T>
+int DeterminateFiniteAutomaton<T>::setBegFromAutomatons(const DeterminateFiniteAutomaton& automaton1,
+                                                        const DeterminateFiniteAutomaton& automaton2)
+{
+	MyStr beg;
+	beg = automaton1.getBeg()->getName();
+	beg = beg + ',' + automaton2.getBeg()->getName();
+	if (getState(beg) != nullptr)
+	{
+		getState(beg)->setBeg();
+	}
+	return 0;
+}
+
+template <typename T>
+int DeterminateFiniteAutomaton<T>::setEndUnion(const DeterminateFiniteAutomaton& automaton1,
+                                               const DeterminateFiniteAutomaton& automaton2)
+{
+	MyStr st1;
+	MyStr st2;
+	for (auto i = 0; i < stateCount; i++)
+	{
+		st1 = states[i].getSt1();
+		st2 = states[i].getSt2();
+		if (automaton1.getState(st1)->isEnd() || automaton2.getState(st2)->isEnd())
+		{
+			states[i].setEnd();
+		}
+	}
+	return 0;
+}
+
+template <typename T>
+int DeterminateFiniteAutomaton<T>::setEndIntersection(const DeterminateFiniteAutomaton& automaton1,
+                                                      const DeterminateFiniteAutomaton& automaton2)
+{
+	MyStr st1;
+	MyStr st2;
+	for (auto i = 0; i < stateCount; i++)
+	{
+		st1 = states[i].getSt1();
+		st2 = states[i].getSt2();
+		if (automaton1.getState(st1)->isEnd() && automaton2.getState(st2)->isEnd())
+		{
+			states[i].setEnd();
+		}
+	}
+	return 0;
+}
+
+template <typename T>
+int DeterminateFiniteAutomaton<T>::makeAlphFromAutomatons(const DeterminateFiniteAutomaton<T>& automaton1,
+                                                          const DeterminateFiniteAutomaton<T>& automaton2)
+{
+	unsigned cnt = automaton1.getSymbols();
+	bool same;
+	for (auto i = 0; i < automaton2.getSymbols(); i++)
+	{
+		same = false;
+		for (auto j = 0; j < automaton1.getSymbols(); j++)
+		{
+			if (automaton2.getSymbol(i) == automaton1.getSymbol(j))
+			{
+				same = true;
+				break;
+			}
+		}
+		if (!same) ++cnt;
+	}
+	symbols = cnt;
+	alphabet = new T[cnt];
+	unsigned k = 0;
+	for (; k < automaton1.getSymbols(); k++)
+	{
+		alphabet[k] = automaton1.getSymbol(k);
+	}
+	for (auto i = 0; i < automaton2.getSymbols(); i++)
+	{
+		same = false;
+		for (auto j = 0; j < automaton1.getSymbols(); j++)
+		{
+			if (automaton2.getSymbol(i) == automaton1.getSymbol(j))
+			{
+				same = true;
+				break;
+			}
+		}
+		if (!same)
+		{
+			alphabet[k] = automaton2.getSymbol(i);
+			k++;
+		}
+	}
+	return 0;
+}
+
+template <typename T>
+int DeterminateFiniteAutomaton<T>::makeTableFromAutomatons(const DeterminateFiniteAutomaton<T>& automaton1,
+                                                           const DeterminateFiniteAutomaton<T>& automaton2)
+{
+	trTable = new State*[stateCount];
+	for (auto i = 0; i < stateCount; i++)
+	{
+		trTable[i] = new State[symbols];
+	}
+	MyStr name1;
+	MyStr name2;
+	MyStr resState;
+	State* tr1;
+	State* tr2;
+	for (int i = 0; i < stateCount; i++)
+	{
+		for (int j = 0; j < symbols; j++)
+		{
+			name1 = states[i].getSt1();
+			name2 = states[i].getSt2();
+			tr1 = automaton1.transition(automaton1.getState(name1), alphabet[j]);
+			if (tr1 != nullptr)
+			{
+				resState = tr1->getName();
+			}
+			else
+			{
+				resState = states[i].getSt1();
+			}
+			resState = resState + ',';
+			tr2 = automaton2.transition(automaton2.getState(name2), alphabet[j]);
+			if (tr2 != nullptr)
+			{
+				resState = resState + tr2->getName();
+			}
+			else
+			{
+				resState = resState + states[i].getSt2();
+			}
+			trTable[i][j] = *(this->getState(resState));
+		}
 	}
 	return 0;
 }
@@ -453,7 +643,7 @@ int DeterminateFiniteAutomaton<T>::setEnd(const MyStr& str) const
 		if (tmp == nullptr)
 		{
 			line = __LINE__;
-			throw (AutomatonStateException(str));
+			throw(AutomatonStateException(str));
 		}
 	}
 	catch (AutomatonStateException& e)
@@ -461,7 +651,6 @@ int DeterminateFiniteAutomaton<T>::setEnd(const MyStr& str) const
 		std::cerr << "Exception cought at line " << line << std::endl;
 		std::cerr << "Exception type:" << typeid(e).name() << std::endl;
 		std::cerr << e.message() << std::endl;
-		throw;
 	}
 	tmp->setEnd();
 	return 0;
@@ -542,7 +731,7 @@ std::istream& operator>>(std::istream& lhs, DeterminateFiniteAutomaton<T>& rhs)
 	unsigned num;
 	if (typeid(lhs) == typeid(std::cin))
 	{
-		std::cout << "Please enter number of states:";
+		std::cout << "\nPlease enter number of states:";
 	}
 	lhs >> num;
 	rhs.inputSt(lhs, num);
@@ -584,7 +773,7 @@ std::ostream& operator<<(std::ostream& lhs, const DeterminateFiniteAutomaton<T>&
 {
 	lhs << "Transition table:" << std::endl;
 	rhs.printTable(lhs);
-	lhs << "Initial state:" << *(rhs.getBeg()) << std::endl;
+	lhs << "Initial state: " << *(rhs.getBeg()) << std::endl;
 	lhs << "Final states: ";
 	for (unsigned i = 0; i < rhs.getNum(); i++)
 	{
@@ -596,6 +785,5 @@ std::ostream& operator<<(std::ostream& lhs, const DeterminateFiniteAutomaton<T>&
 	lhs << "\n";
 	return lhs;
 }
-
 
 #endif
