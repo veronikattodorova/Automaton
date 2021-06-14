@@ -92,7 +92,7 @@ CreationOptions Menu::chooseCreationMethod()
 	std::cout << "2-> Import data from a txt file" << std::endl;
 	std::cout << "3-> Unify 2 existing automatons" << std::endl;
 	std::cout << "4-> Intersect 2 existing automatons" << std::endl;
-	std::cout << "5-> Import data from a txt file" << std::endl;
+	std::cout << "5-> Inverse automatons" << std::endl;
 
 	int methodOption;
 	std::cin >> methodOption;
@@ -103,7 +103,7 @@ CreationOptions Menu::chooseCreationMethod()
 		std::cout << "2-> Import data from a txt file" << std::endl;
 		std::cout << "3-> Unify 2 existing automatons" << std::endl;
 		std::cout << "4-> Intersect 2 existing automatons" << std::endl;
-		std::cout << "5-> Import data from a txt file" << std::endl;
+		std::cout << "5-> Inverse automatons" << std::endl;
 		std::cin >> methodOption;
 	}
 	return static_cast<CreationOptions>(methodOption);

@@ -157,7 +157,7 @@ int executeAutomatonOpeartions(DeterminateFiniteAutomaton<T>& newAutomaton,
 		int automatonForUnion2 = chooseAutomaton<T>(automatonArr);
 		newAutomaton = automatonArr[automatonForUnion1] | automatonArr[automatonForUnion2];
 	}
-	if (operation == OPERATION_INTERSECT)
+	else if (operation == OPERATION_INTERSECT)
 	{
 		if (automatonArr.size() < 2)
 		{
