@@ -1,5 +1,6 @@
 #ifndef MENU_H
 #define MENU_H
+#include <fstream>
 #include <vector>
 #include "MyStr.h"
 #include "DFA.h"
@@ -78,13 +79,18 @@ int printAutomaton(std::vector<DeterminateFiniteAutomaton<T>>& automatonArr)
 			std::cout << automatonArr[automatonIndex];
 		else
 		{
-			std::fstream fout("out.txt");
-			if (!fout)
+			char outputFileName[100];
+			std::cout << "Enter the file to output data to: ";
+			std::cin >> outputFileName;
+			std::ofstream fout(outputFileName);
+			 if (!fout)
 			{
-				std::cout << "File could not be opened\n";
+				std::cout << "File could not be opened/created\n";
 				return -1;
 			}
+
 			fout << automatonArr[automatonIndex];
+			fout.close();
 		}
 	}
 	return automatonIndex;
@@ -93,13 +99,17 @@ int printAutomaton(std::vector<DeterminateFiniteAutomaton<T>>& automatonArr)
 template <typename T>
 int inputFromFile(DeterminateFiniteAutomaton<T>& newAutomaton)
 {
-	std::ifstream fin("in.txt");
+	char fileName[100];
+	std::cout << "Enter file name to input data from: ";
+	std::cin >> fileName;
+	std::ifstream fin(fileName);
 	if (!fin)
 	{
-		std::cout << "File could not be opened\n";
+		std::cout << "File could not be opened, perhaps you entered an invalid file name\n";
 		return -1;
 	}
 	fin >> newAutomaton;
+	fin.close();
 	return 0;
 }
 
